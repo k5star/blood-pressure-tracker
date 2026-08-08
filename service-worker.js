@@ -1,10 +1,10 @@
-const CACHE_NAME = 'blood-pressure-journal-v2';
+const CACHE_NAME = 'blood-pressure-journal-v3';
 const APP_FILES = [
   './',
   './index.html',
-  './styles.css?v=20260808-6',
+  './styles.css?v=20260808-7',
   './offline-store.js?v=20260808-10',
-  './app.js?v=20260808-10',
+  './app.js?v=20260808-11',
   './cloud.js?v=20260808-10',
   './liff-init.js?v=20260808-6',
   './supabase-config.js?v=20260808-6',

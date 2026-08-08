@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20260808-6" />
+  <link rel="stylesheet" href="styles.css?v=20260808-7" />
   <style>.auth-card select{width:100%;border:1px solid #d9e6e3;border-radius:10px;background:#fff;padding:13px 14px;color:#172b4d;outline:0}.auth-card select:focus{border-color:#2d9c9a;box-shadow:0 0 0 3px rgba(45,156,154,.12)}.camera-btn{width:100%;margin:-4px 0 16px;background:#edf8f6;color:#237f7d;border:1px solid #c8e8e1;border-radius:10px;padding:11px;font-weight:700}.camera-panel{margin:-6px 0 16px;background:#152b38;border-radius:12px;overflow:hidden;padding:10px}.camera-panel video{display:block;width:100%;max-height:260px;object-fit:cover;border-radius:8px}.camera-actions{display:flex;gap:8px;margin-top:9px}.camera-actions button{flex:1;border-radius:8px;padding:10px;font-weight:700}.capture-btn{background:#2d9c9a;color:#fff}.cancel-camera{background:#fff;color:#52667d}</style>
 </head>
 <body>
@@ -53,7 +53,7 @@
       <button class="nav-item" data-section="body"><span>⚖</span> 身高體重</button>
     </nav><div class="sidebar-bottom"><div class="tip-card"><span>✦</span><strong>小提醒</strong><p>測量前安靜坐 5 分鐘，讓數值更穩定。</p></div><button id="logoutBtn" class="logout">↪ 登出</button></div></aside>
     <main class="main-content"><header class="topbar"><div><p class="eyebrow">HEALTH OVERVIEW</p><h1>早安，<span id="userName">朋友</span></h1></div><div class="profile-chip"><div class="avatar" id="avatar">友</div><div><strong id="profileName">朋友</strong><small>健康追蹤者</small></div></div></header>
-      <div id="overviewSection" class="content-section"><div class="hero-card"><div><p class="eyebrow">TODAY'S CHECK-IN</p><h2>今天測量了嗎？</h2><p>上傳血壓計照片，讓我們幫你留下這次的健康足跡。</p><button class="primary-btn" data-open-upload>＋ 上傳測量照片</button></div><div class="hero-art"><div class="monitor"><div class="monitor-screen"><span>SYS</span><b>120</b><span>DIA　 80</span><span>PUL　 72</span></div><div class="monitor-base"></div></div></div></div>
+      <div id="overviewSection" class="content-section"><div class="hero-card"><div><p class="eyebrow">TODAY'S CHECK-IN</p><h2>今天測量了嗎？</h2><p>可直接輸入數值，或拍照辨識血壓計；兩種方式都能建立紀錄。</p><button class="primary-btn" data-open-upload>＋ 新增紀錄</button></div><div class="hero-art"><div class="monitor"><div class="monitor-screen"><span>SYS</span><b>120</b><span>DIA　 80</span><span>PUL　 72</span></div><div class="monitor-base"></div></div></div></div>
         <div class="section-heading"><div><p class="eyebrow">AT A GLANCE</p><h2>最近一次測量</h2></div><button class="link-btn" data-section-link="records">查看全部紀錄 →</button></div>
         <div id="latestCards" class="metric-grid"></div><div class="section-heading trend-heading"><div><p class="eyebrow">LAST 7 DAYS</p><h2>一週變化</h2></div><span class="date-label">mmHg / bpm</span></div><div class="chart-card"><canvas id="trendCanvas" width="900" height="260"></canvas><div id="emptyChart" class="empty-state hidden">再累積幾筆紀錄，就能看到你的趨勢圖。</div></div>
       </div>
@@ -62,14 +62,14 @@
     </main>
   </section>
 
-  <div id="uploadModal" class="modal hidden"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><button class="close-btn" data-close-modal>×</button><p class="eyebrow">NEW MEASUREMENT</p><h2>新增測量紀錄</h2><p class="muted">上傳清晰、正面拍攝的血壓計照片。</p><div id="dropZone" class="drop-zone"><input id="photoInput" type="file" accept="image/*" capture="environment" /><div class="upload-icon">⌁</div><strong>拍照或選擇血壓計照片</strong><span>建議正面、光線充足、完整拍到螢幕</span><img id="preview" class="preview hidden" alt="血壓計照片預覽" /></div><div id="scanStatus" class="scan-status hidden">✦ 正在裁切螢幕並辨識數字…</div><div class="form-grid"><label>高壓 SYS<input id="sysInput" type="number" min="50" max="300" placeholder="例如 111" /></label><label>低壓 DIA<input id="diaInput" type="number" min="30" max="200" placeholder="例如 66" /></label><label>脈搏 PUL<input id="pulseInput" type="number" min="30" max="220" placeholder="例如 65" /></label></div><p class="form-hint">辨識結果一定要先人工確認；若照片模糊，系統會留空，不會猜測數值。</p><button id="saveRecord" class="primary-btn full-btn">儲存這次測量</button></div></div>
+  <div id="uploadModal" class="modal hidden"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><button class="close-btn" data-close-modal>×</button><p class="eyebrow">NEW MEASUREMENT</p><h2>新增紀錄</h2><div class="entry-choice"><strong>方式一：直接輸入</strong><span>在下方填寫高壓、低壓與脈搏。</span><strong>方式二：拍照辨識（選用）</strong><span>拍攝或選擇血壓計照片，自動帶入數字後再確認。照片不會上傳雲端。</span></div><div id="dropZone" class="drop-zone"><input id="photoInput" type="file" accept="image/*" capture="environment" /><div class="upload-icon">⌁</div><strong>拍照辨識血壓計（選用）</strong><span>建議正面、光線充足、完整拍到螢幕</span><img id="preview" class="preview hidden" alt="血壓計照片預覽" /></div><div id="scanStatus" class="scan-status hidden">✦ 正在裁切螢幕並辨識數字…</div><div class="form-grid"><label>高壓 SYS<input id="sysInput" type="number" min="50" max="300" placeholder="例如 111" /></label><label>低壓 DIA<input id="diaInput" type="number" min="30" max="200" placeholder="例如 66" /></label><label>脈搏 PUL<input id="pulseInput" type="number" min="30" max="220" placeholder="例如 65" /></label></div><p class="form-hint">拍照辨識後，請人工確認數值；也可以完全不拍照，直接輸入後儲存。</p><button id="saveRecord" class="primary-btn full-btn">儲存紀錄</button></div></div>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="liff-init.js?v=20260808-6"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js?v=20260808-6"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <script src="offline-store.js?v=20260808-10"></script>
-  <script src="app.js?v=20260808-10"></script>
+  <script src="app.js?v=20260808-11"></script>
   <script src="cloud.js?v=20260808-10"></script>
   <script src="pwa.js"></script>
 </body></html>
