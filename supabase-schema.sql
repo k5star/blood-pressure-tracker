@@ -10,11 +10,17 @@ create table if not exists public.bp_measurements (
 );
 
 alter table public.bp_measurements enable row level security;
+drop policy if exists "bp users can read own measurements" on public.bp_measurements;
+drop policy if exists "bp users can insert own measurements" on public.bp_measurements;
+drop policy if exists "bp users can delete own measurements" on public.bp_measurements;
 create policy "bp users can read own measurements" on public.bp_measurements for select using (auth.uid() = user_id);
 create policy "bp users can insert own measurements" on public.bp_measurements for insert with check (auth.uid() = user_id);
 create policy "bp users can delete own measurements" on public.bp_measurements for delete using (auth.uid() = user_id);
 
 insert into storage.buckets (id, name, public) values ('blood-pressure-photos', 'blood-pressure-photos', false) on conflict (id) do nothing;
+drop policy if exists "bp users can upload own photos" on storage.objects;
+drop policy if exists "bp users can read own photos" on storage.objects;
+drop policy if exists "bp users can delete own photos" on storage.objects;
 create policy "bp users can upload own photos" on storage.objects for insert with check (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "bp users can read own photos" on storage.objects for select using (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "bp users can delete own photos" on storage.objects for delete using (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
