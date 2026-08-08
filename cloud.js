@@ -1,4 +1,4 @@
-// Supabase connection and family-member sign-in for the GitHub Pages site.
+// Supabase connection, cloud sync, and offline queue support.
 (async function(){
   const cfg=window.SUPABASE_CONFIG;
   const clientKey=cfg?.publishableKey||cfg?.anonKey;
@@ -25,19 +25,20 @@
   function setCloudUser(user){
     const member=Object.values(members).find(item=>item.email===user?.email);
     state.user=user?{id:user.id,name:member?.name||user.user_metadata?.name||currentMember().name,email:user.email}:null;
+    save();
   }
   function updateAuthUI(){
     const member=currentMember();
     $('#emailInput').value=member.email;
-    $('#authTitle').textContent=setupMode?`設定 ${member.name} 的密碼`:`${member.name}，歡迎回來`;
-    $('#authSubtitle').textContent=setupMode?'第一次使用時，設定一組專屬密碼。':'選擇家人並輸入專屬密碼。';
+    $('#authTitle').textContent=setupMode?`設定 ${member.name} 的密碼`:`${member.name}，登入你的帳戶`;
+    $('#authSubtitle').textContent=setupMode?'第一次使用時，設定一組專屬密碼。':'每天一點記錄，讓健康更有跡可循。';
     $('#confirmPasswordField').classList.toggle('hidden',!setupMode);
     $('#authSubmit').textContent=setupMode?'設定並登入':'登入';
     $('#setupMemberBtn').innerHTML=setupMode?'已設定過密碼？ <strong>返回登入</strong>':'第一次使用此成員？ <strong>設定密碼</strong>';
     $('#passwordInput').value=''; $('#confirmPasswordInput').value='';
   }
   async function loadRecords(){
-    if(!session){state.records=[];state.bodyRecords=[];return}
+    if(!session){return}
     const [bloodPressure,body]=await Promise.all([
       client.from('bp_measurements').select('*').order('measured_at',{ascending:false}).limit(LOAD_LIMIT),
       client.from('body_measurements').select('*').order('measured_at',{ascending:false}).limit(LOAD_LIMIT)
@@ -46,61 +47,74 @@
     if(body.error){console.error(body.error);toast('讀取身高體重紀錄失敗，請先執行最新 Supabase SQL');return}
     state.records=(bloodPressure.data||[]).map(r=>({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path}));
     state.bodyRecords=(body.data||[]).map(r=>({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,height:r.height_cm,weight:r.weight_kg,bmi:r.bmi}));
+    save();
+  }
+  async function syncPendingRecords(){
+    if(!navigator.onLine || !session || !window.bpOfflineStore) return;
+    const pending=await window.bpOfflineStore.all();
+    let synced=0;
+    for(const item of pending.filter(entry=>entry.userId===session.user.id)){
+      const table=item.type==='body'?'body_measurements':'bp_measurements';
+      const payload=item.type==='body'
+        ?{user_id:item.userId,member_name:item.memberName,height_cm:item.height,weight_kg:item.weight,bmi:item.bmi,measured_at:item.date}
+        :{user_id:item.userId,member_name:item.memberName,systolic:item.sys,diastolic:item.dia,pulse:item.pulse,measured_at:item.date};
+      const {error}=await client.from(table).insert(payload);
+      if(error){console.error(error);break}
+      await window.bpOfflineStore.remove(item.id);
+      synced++;
+    }
+    if(synced){await loadRecords();renderAll();toast(`已同步 ${synced} 筆離線紀錄`)}
+  }
+  async function saveOffline(type,payload){
+    const record=await window.queueOfflineMeasurement(type,payload);
+    if(type==='body') state.bodyRecords.unshift(record); else state.records.unshift(record);
+    save();renderAll();
   }
 
   $('#memberInput').onchange=()=>{setupMode=false;updateAuthUI()};
   $('#setupMemberBtn').onclick=()=>{setupMode=!setupMode;updateAuthUI()};
   $('#authForm').onsubmit=async e=>{
     e.preventDefault();
-    const member=currentMember();
-    const password=$('#passwordInput').value;
-    const confirm=$('#confirmPasswordInput').value;
+    if(!navigator.onLine){toast('首次登入或設定密碼需要網路');return}
+    const member=currentMember(),password=$('#passwordInput').value,confirm=$('#confirmPasswordInput').value;
     if(password.length<6){toast('密碼至少需要 6 個字元');return}
-    if(setupMode&&password!==confirm){toast('兩次輸入的密碼不同');return}
-
+    if(setupMode&&password!==confirm){toast('兩次密碼不相同');return}
     const result=setupMode
       ?await client.auth.signUp({email:member.email,password,options:{data:{name:member.name,family_member:$('#memberInput').value}}})
       :await client.auth.signInWithPassword({email:member.email,password});
-    if(result.error){
-      const message=result.error.message;
-      toast(message.includes('already registered')?'此成員已設定密碼，請改用登入。':message.includes('email rate limit')?'帳號建立太頻繁，請先在 Supabase 關閉 Email confirmation，稍後再試。':message.includes('Invalid login')?'密碼不正確':'無法登入：'+message);
-      return;
-    }
+    if(result.error){toast(result.error.message.includes('email rate limit')?'寄信次數過多，請確認已關閉 Supabase 的 Email confirmation。':result.error.message);return}
     session=result.data.session;
-    if(!session){toast('已建立帳號；請到 Supabase 關閉 Email confirmation 後再登入。');return}
-    setCloudUser(session.user); await loadRecords(); renderAuth(); toast(`${member.name}，登入成功`);
+    if(!session){toast('帳號已建立；請確認 Supabase 已關閉 Email confirmation 後再登入。');return}
+    setCloudUser(session.user); await syncPendingRecords(); await loadRecords(); renderAuth(); toast(`${member.name}，登入成功`);
   };
-  $('#logoutBtn').onclick=async()=>{await client.auth.signOut();session=null;setCloudUser(null);state.records=[];renderAuth();updateAuthUI();toast('已登出')};
+  $('#logoutBtn').onclick=async()=>{await client.auth.signOut();session=null;state.user=null;state.records=[];state.bodyRecords=[];save();renderAuth();updateAuthUI();toast('已登出')};
   $('#photoInput').addEventListener('change',e=>{window.bpPhotoFile=e.target.files[0]||null});
   $('#bodyRecordForm').onsubmit=async e=>{
     e.preventDefault();
-    const height=+$('#heightInput').value,weight=+$('#weightInput').value;
+    const height=+$('#heightInput').value,weight=+$('#weightInput').value,bmi=Number((weight/((height/100)**2)).toFixed(1));
     if(!height||!weight){toast('請輸入身高和體重');return}
-    if(!session){toast('請先登入');return}
-    const btn=$('#saveBodyRecord');btn.disabled=true;btn.textContent='儲存中…';
+    const btn=$('#saveBodyRecord');btn.disabled=true;
     try{
-      const bmi=Number((weight/((height/100)**2)).toFixed(1));
+      if(!navigator.onLine||!session){await saveOffline('body',{height,weight,bmi});$('#bodyRecordForm').reset();toast('目前離線，已暫存手機');return}
       const insert=await client.from('body_measurements').insert({user_id:session.user.id,member_name:state.user.name,height_cm:height,weight_kg:weight,bmi}).select().single();
       if(insert.error)throw insert.error;
       const r=insert.data;state.bodyRecords.unshift({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,height:r.height_cm,weight:r.weight_kg,bmi:r.bmi});
-      $('#bodyRecordForm').reset();renderAll();toast('身高體重已儲存');
-    }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存身高體重'}
+      save();$('#bodyRecordForm').reset();renderAll();toast('身高體重已儲存');
+    }catch(err){console.error(err);if(!navigator.onLine){await saveOffline('body',{height,weight,bmi});$('#bodyRecordForm').reset();toast('連線中斷，已暫存手機')}else toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存身高體重'}
   };
   $('#saveRecord').onclick=async()=>{
     const sys=+$('#sysInput').value,dia=+$('#diaInput').value,pulse=+$('#pulseInput').value;
     if(!sys||!dia||!pulse){toast('請確認三項數值都已填寫');return}
-    if(!session){toast('請先登入');return}
-    const btn=$('#saveRecord');btn.disabled=true;btn.textContent='儲存中…';let photoPath=null;
+    const btn=$('#saveRecord');btn.disabled=true;
     try{
-      const file=window.bpPhotoFile;
-      if(file){btn.textContent='正在上傳照片…';photoPath=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const upload=await client.storage.from('blood-pressure-photos').upload(photoPath,file,{contentType:file.type,upsert:false});if(upload.error)throw upload.error}
+      if(!navigator.onLine||!session){await saveOffline('blood-pressure',{sys,dia,pulse});closeModal();toast('目前離線，已暫存手機');return}
       btn.textContent='正在儲存數值…';
-      const insert=await client.from('bp_measurements').insert({user_id:session.user.id,member_name:state.user.name,systolic:sys,diastolic:dia,pulse,photo_path:photoPath}).select().single();
+      const insert=await client.from('bp_measurements').insert({user_id:session.user.id,member_name:state.user.name,systolic:sys,diastolic:dia,pulse}).select().single();
       if(insert.error)throw insert.error;
-      const r=insert.data;state.records.unshift({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path});
-      closeModal();renderAll();toast('測量與照片已儲存');
-    }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存這次測量'}
+      const r=insert.data;state.records.unshift({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:null});
+      save();closeModal();renderAll();toast('血壓紀錄已儲存');
+    }catch(err){console.error(err);if(!navigator.onLine){await saveOffline('blood-pressure',{sys,dia,pulse});closeModal();toast('連線中斷，已暫存手機')}else toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存這次測量'}
   };
-  const originalOpen=window.openModal;window.openModal=function(){window.bpPhotoFile=null;originalOpen()};
-  const {data}=await client.auth.getSession();session=data.session;setCloudUser(session?.user||null);await loadRecords();updateAuthUI();renderAuth();
+  window.addEventListener('online',syncPendingRecords);
+  const {data}=await client.auth.getSession();session=data.session;setCloudUser(session?.user||null);if(session){await syncPendingRecords();await loadRecords()}updateAuthUI();renderAuth();
 })();

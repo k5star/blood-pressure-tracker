@@ -1,10 +1,11 @@
-const CACHE_NAME = 'blood-pressure-journal-v1';
+const CACHE_NAME = 'blood-pressure-journal-v2';
 const APP_FILES = [
   './',
   './index.html',
   './styles.css?v=20260808-6',
-  './app.js?v=20260808-9',
-  './cloud.js?v=20260808-9',
+  './offline-store.js?v=20260808-10',
+  './app.js?v=20260808-10',
+  './cloud.js?v=20260808-10',
   './liff-init.js?v=20260808-6',
   './supabase-config.js?v=20260808-6',
   './manifest.webmanifest',
@@ -24,5 +25,9 @@ self.addEventListener('activate', event => {
 
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET' || new URL(event.request.url).origin !== self.location.origin) return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith(fetch(event.request).then(response => response).catch(() => caches.match('./index.html')));
+    return;
+  }
   event.respondWith(caches.match(event.request).then(cached => cached || fetch(event.request)));
 });
