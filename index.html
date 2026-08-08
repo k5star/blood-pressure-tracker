@@ -58,6 +58,8 @@
   </section>
 
   <div id="uploadModal" class="modal hidden"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><button class="close-btn" data-close-modal>×</button><p class="eyebrow">NEW MEASUREMENT</p><h2>新增測量紀錄</h2><p class="muted">上傳清晰、正面拍攝的血壓計照片。</p><div id="dropZone" class="drop-zone"><input id="photoInput" type="file" accept="image/*" capture="environment" /><div class="upload-icon">⌁</div><strong>拍照或選擇血壓計照片</strong><span>建議正面、光線充足、完整拍到螢幕</span><img id="preview" class="preview hidden" alt="血壓計照片預覽" /></div><button id="openCameraBtn" class="camera-btn" type="button">📷 使用相機拍攝</button><div id="cameraPanel" class="camera-panel hidden"><video id="cameraVideo" autoplay playsinline></video><div class="camera-actions"><button id="captureCameraBtn" class="capture-btn" type="button">拍攝這張照片</button><button id="cancelCameraBtn" class="cancel-camera" type="button">取消</button></div></div><div id="scanStatus" class="scan-status hidden">✦ 正在裁切螢幕並辨識數字…</div><div class="form-grid"><label>高壓 SYS<input id="sysInput" type="number" min="50" max="300" placeholder="例如 111" /></label><label>低壓 DIA<input id="diaInput" type="number" min="30" max="200" placeholder="例如 66" /></label><label>脈搏 PUL<input id="pulseInput" type="number" min="30" max="220" placeholder="例如 65" /></label></div><p class="form-hint">辨識結果一定要先人工確認；若照片模糊，系統會留空，不會猜測數值。</p><button id="saveRecord" class="primary-btn full-btn">儲存這次測量</button></div></div>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script src="liff-init.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
