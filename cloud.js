@@ -19,7 +19,6 @@
   let session=null;
   let setupMode=false;
   const LOAD_LIMIT=100;
-  window.bpPhotoFile=null;
 
   const currentMember=()=>members[$('#memberInput').value];
   function setCloudUser(user){
@@ -88,7 +87,6 @@
     setCloudUser(session.user); await syncPendingRecords(); await loadRecords(); renderAuth(); toast(`${member.name}，登入成功`);
   };
   $('#logoutBtn').onclick=async()=>{await client.auth.signOut();session=null;state.user=null;state.records=[];state.bodyRecords=[];save();renderAuth();updateAuthUI();toast('已登出')};
-  $('#photoInput').addEventListener('change',e=>{window.bpPhotoFile=e.target.files[0]||null});
   $('#bodyRecordForm').onsubmit=async e=>{
     e.preventDefault();
     const height=+$('#heightInput').value,weight=+$('#weightInput').value,bmi=Number((weight/((height/100)**2)).toFixed(1));
