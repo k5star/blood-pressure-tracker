@@ -35,10 +35,15 @@
     $('#passwordInput').value=''; $('#confirmPasswordInput').value='';
   }
   async function loadRecords(){
-    if(!session){state.records=[];return}
-    const {data,error}=await client.from('bp_measurements').select('*').order('measured_at',{ascending:false});
-    if(error){console.error(error);toast('讀取雲端紀錄失敗');return}
-    state.records=(data||[]).map(r=>({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path}));
+    if(!session){state.records=[];state.bodyRecords=[];return}
+    const [bloodPressure,body]=await Promise.all([
+      client.from('bp_measurements').select('*').order('measured_at',{ascending:false}),
+      client.from('body_measurements').select('*').order('measured_at',{ascending:false})
+    ]);
+    if(bloodPressure.error){console.error(bloodPressure.error);toast('讀取血壓紀錄失敗');return}
+    if(body.error){console.error(body.error);toast('讀取身高體重紀錄失敗，請先執行最新 Supabase SQL');return}
+    state.records=(bloodPressure.data||[]).map(r=>({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path}));
+    state.bodyRecords=(body.data||[]).map(r=>({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,height:r.height_cm,weight:r.weight_kg,bmi:r.bmi}));
   }
 
   $('#memberInput').onchange=()=>{setupMode=false;updateAuthUI()};
@@ -65,6 +70,18 @@
   };
   $('#logoutBtn').onclick=async()=>{await client.auth.signOut();session=null;setCloudUser(null);state.records=[];renderAuth();updateAuthUI();toast('已登出')};
   $('#photoInput').addEventListener('change',e=>{window.bpPhotoFile=e.target.files[0]||null});
+  $('#bodyRecordForm').onsubmit=async e=>{
+    e.preventDefault();
+    const height=+$('#heightInput').value,weight=+$('#weightInput').value;
+    if(!height||!weight){toast('請輸入身高和體重');return}
+    if(!session){toast('請先登入');return}
+    const btn=$('#saveBodyRecord');btn.disabled=true;btn.textContent='儲存中…';
+    try{
+      const bmi=Number((weight/((height/100)**2)).toFixed(1));
+      const insert=await client.from('body_measurements').insert({user_id:session.user.id,member_name:state.user.name,height_cm:height,weight_kg:weight,bmi}).select().single();
+      if(insert.error)throw insert.error;await loadRecords();$('#bodyRecordForm').reset();renderAll();toast('身高體重已儲存');
+    }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存身高體重'}
+  };
   $('#saveRecord').onclick=async()=>{
     const sys=+$('#sysInput').value,dia=+$('#diaInput').value,pulse=+$('#pulseInput').value;
     if(!sys||!dia||!pulse){toast('請確認三項數值都已填寫');return}
