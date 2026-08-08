@@ -6,21 +6,28 @@ create table if not exists public.bp_measurements (
   diastolic integer not null check (diastolic between 30 and 200),
   pulse integer not null check (pulse between 30 and 220),
   photo_path text,
+  member_name text not null default '未指定',
   measured_at timestamptz not null default now()
 );
 
+alter table public.bp_measurements add column if not exists member_name text;
+update public.bp_measurements set member_name = '未指定' where member_name is null;
+alter table public.bp_measurements alter column member_name set default '未指定';
 alter table public.bp_measurements enable row level security;
 drop policy if exists "bp users can read own measurements" on public.bp_measurements;
+drop policy if exists "bp users can read own or admin measurements" on public.bp_measurements;
 drop policy if exists "bp users can insert own measurements" on public.bp_measurements;
 drop policy if exists "bp users can delete own measurements" on public.bp_measurements;
-create policy "bp users can read own measurements" on public.bp_measurements for select using (auth.uid() = user_id);
+create policy "bp users can read own or admin measurements" on public.bp_measurements for select using (auth.uid() = user_id or auth.jwt() ->> 'email' = 'bp-admin@family-bp.local');
 create policy "bp users can insert own measurements" on public.bp_measurements for insert with check (auth.uid() = user_id);
 create policy "bp users can delete own measurements" on public.bp_measurements for delete using (auth.uid() = user_id);
 
 insert into storage.buckets (id, name, public) values ('blood-pressure-photos', 'blood-pressure-photos', false) on conflict (id) do nothing;
 drop policy if exists "bp users can upload own photos" on storage.objects;
 drop policy if exists "bp users can read own photos" on storage.objects;
+drop policy if exists "bp admin can read all photos" on storage.objects;
 drop policy if exists "bp users can delete own photos" on storage.objects;
 create policy "bp users can upload own photos" on storage.objects for insert with check (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
 create policy "bp users can read own photos" on storage.objects for select using (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "bp admin can read all photos" on storage.objects for select using (bucket_id = 'blood-pressure-photos' and auth.jwt() ->> 'email' = 'bp-admin@family-bp.local');
 create policy "bp users can delete own photos" on storage.objects for delete using (bucket_id = 'blood-pressure-photos' and (storage.foldername(name))[1] = auth.uid()::text);
