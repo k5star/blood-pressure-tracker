@@ -7,8 +7,8 @@
   const client=window.supabase.createClient(cfg.url,clientKey);
   const members={
     admin:{name:'管理員 k5star',email:'bp-admin@family-bp.local'},
-    dad:{name:'阿公',email:'bp-dad@family-bp.local'},
-    mom:{name:'阿嬤',email:'bp-mom@family-bp.local'},
+    dad:{name:'春林',email:'bp-dad@family-bp.local'},
+    mom:{name:'幼蘭',email:'bp-mom@family-bp.local'},
     brother:{name:'盧大寶',email:'bp-brother@family-bp.local'},
     'sister-in-law':{name:'戈小寶',email:'bp-sister-in-law@family-bp.local'},
     'child-1':{name:'盧小豬',email:'bp-child-1@family-bp.local'},
