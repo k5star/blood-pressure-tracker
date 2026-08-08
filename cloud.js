@@ -7,14 +7,14 @@
   const client=window.supabase.createClient(cfg.url,clientKey);
   const members={
     admin:{name:'管理員 k5star',email:'bp-admin@family-bp.local'},
-    dad:{name:'爸爸',email:'bp-dad@family-bp.local'},
-    mom:{name:'媽媽',email:'bp-mom@family-bp.local'},
-    brother:{name:'哥哥',email:'bp-brother@family-bp.local'},
-    'sister-in-law':{name:'哥哥老婆',email:'bp-sister-in-law@family-bp.local'},
-    'child-1':{name:'老大',email:'bp-child-1@family-bp.local'},
-    'child-2':{name:'老二',email:'bp-child-2@family-bp.local'},
-    'child-3':{name:'老三',email:'bp-child-3@family-bp.local'},
-    'child-4':{name:'老四',email:'bp-child-4@family-bp.local'}
+    dad:{name:'阿公',email:'bp-dad@family-bp.local'},
+    mom:{name:'阿嬤',email:'bp-mom@family-bp.local'},
+    brother:{name:'老爸',email:'bp-brother@family-bp.local'},
+    'sister-in-law':{name:'老媽',email:'bp-sister-in-law@family-bp.local'},
+    'child-1':{name:'盧小豬',email:'bp-child-1@family-bp.local'},
+    'child-2':{name:'盧小胖',email:'bp-child-2@family-bp.local'},
+    'child-3':{name:'盧小白',email:'bp-child-3@family-bp.local'},
+    'child-4':{name:'盧小龍',email:'bp-child-4@family-bp.local'}
   };
   let session=null;
   let setupMode=false;
@@ -23,7 +23,8 @@
 
   const currentMember=()=>members[$('#memberInput').value];
   function setCloudUser(user){
-    state.user=user?{id:user.id,name:user.user_metadata?.name||currentMember().name,email:user.email}:null;
+    const member=Object.values(members).find(item=>item.email===user?.email);
+    state.user=user?{id:user.id,name:member?.name||user.user_metadata?.name||currentMember().name,email:user.email}:null;
   }
   function updateAuthUI(){
     const member=currentMember();
