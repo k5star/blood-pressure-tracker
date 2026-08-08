@@ -12,7 +12,7 @@
     brother:{name:'盧大寶',email:'bp-brother@family-bp.local'},
     'sister-in-law':{name:'戈小寶',email:'bp-sister-in-law@family-bp.local'},
     'child-1':{name:'盧小豬',email:'bp-child-1@family-bp.local'},
-    'child-2':{name:'盧小胖',email:'bp-child-2@family-bp.local'},
+    'child-2':{name:'盧小珊',email:'bp-child-2@family-bp.local'},
     'child-3':{name:'盧小白',email:'bp-child-3@family-bp.local'},
     'child-4':{name:'盧小龍',email:'bp-child-4@family-bp.local'}
   };
