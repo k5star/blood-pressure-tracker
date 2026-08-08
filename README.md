@@ -12,7 +12,7 @@
 ## GitHub Pages + Supabase 設定
 
 1. 建立 Supabase 專案。
-2. 在 Supabase SQL Editor 執行 `supabase-schema.sql`。
+2. 在 Supabase SQL Editor 執行 `supabase-schema.sql`。血壓功能使用獨立的 `bp_measurements` 資料表與 `blood-pressure-photos` 儲存桶，不會使用其他系統的資料表或照片桶。
 3. 複製 `supabase-config.example.js` 為 `supabase-config.js`，填入 Project URL 與 anon key。
 4. 將整個資料夾推送到 GitHub，於 repository 的 Settings → Pages 選擇 GitHub Actions 或 main branch 發布。
 

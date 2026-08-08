@@ -11,7 +11,7 @@
   }
   async function loadRecords(){
     if(!session){state.records=[];return}
-    const {data,error}=await client.from('measurements').select('*').order('measured_at',{ascending:false});
+    const {data,error}=await client.from('bp_measurements').select('*').order('measured_at',{ascending:false});
     if(error){console.error(error);toast('讀取雲端紀錄失敗');return}
     state.records=(data||[]).map(r=>({id:r.id,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path}));
   }
@@ -33,8 +33,8 @@
     const btn=$('#saveRecord');btn.disabled=true;btn.textContent='儲存中…'; let photoPath=null;
     try{
       const file=window.bpPhotoFile;
-      if(file){photoPath=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const upload=await client.storage.from('bp-photos').upload(photoPath,file,{contentType:file.type,upsert:false});if(upload.error)throw upload.error}
-      const insert=await client.from('measurements').insert({user_id:session.user.id,systolic:sys,diastolic:dia,pulse,photo_path:photoPath}).select().single();
+      if(file){photoPath=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const upload=await client.storage.from('blood-pressure-photos').upload(photoPath,file,{contentType:file.type,upsert:false});if(upload.error)throw upload.error}
+      const insert=await client.from('bp_measurements').insert({user_id:session.user.id,systolic:sys,diastolic:dia,pulse,photo_path:photoPath}).select().single();
       if(insert.error)throw insert.error; await loadRecords(); closeModal(); renderAll(); toast('測量與照片已安全儲存');
     }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存這次測量'}
   };
