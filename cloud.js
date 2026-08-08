@@ -1,8 +1,9 @@
 // Optional cloud mode for GitHub Pages. If no valid config exists, app.js keeps local demo mode.
 (async function(){
   const cfg=window.SUPABASE_CONFIG;
-  if(!cfg || !cfg.url || cfg.url.includes('YOUR-PROJECT') || !window.supabase) return;
-  const client=window.supabase.createClient(cfg.url,cfg.anonKey);
+  const clientKey=cfg?.publishableKey||cfg?.anonKey;
+  if(!cfg || !cfg.url || cfg.url.includes('YOUR-PROJECT') || !clientKey || !window.supabase) return;
+  const client=window.supabase.createClient(cfg.url,clientKey);
   let session=null;
   window.bpPhotoFile=null;
 
