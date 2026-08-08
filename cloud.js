@@ -56,7 +56,7 @@
       :await client.auth.signInWithPassword({email:member.email,password});
     if(result.error){
       const message=result.error.message;
-      toast(message.includes('already registered')?'此成員已設定密碼，請改用登入。':message.includes('Invalid login')?'密碼不正確':'無法登入：'+message);
+      toast(message.includes('already registered')?'此成員已設定密碼，請改用登入。':message.includes('email rate limit')?'帳號建立太頻繁，請先在 Supabase 關閉 Email confirmation，稍後再試。':message.includes('Invalid login')?'密碼不正確':'無法登入：'+message);
       return;
     }
     session=result.data.session;
