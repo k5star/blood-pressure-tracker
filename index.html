@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css" />
+  <style>.auth-card select{width:100%;border:1px solid #d9e6e3;border-radius:10px;background:#fff;padding:13px 14px;color:#172b4d;outline:0}.auth-card select:focus{border-color:#2d9c9a;box-shadow:0 0 0 3px rgba(45,156,154,.12)}</style>
 </head>
 <body>
   <div id="toast" class="toast"></div>
@@ -25,15 +26,17 @@
     <div class="auth-panel">
       <div class="auth-card">
         <div class="mobile-brand brand-mark"><span>♥</span> 壓力日記</div>
-        <p class="eyebrow">WELCOME BACK</p><h2 id="authTitle">登入你的帳戶</h2><p class="muted" id="authSubtitle">每天一點記錄，讓健康更有跡可循。</p>
+        <p class="eyebrow">FAMILY HEALTH LOG</p><h2 id="authTitle">選擇家人登入</h2><p class="muted" id="authSubtitle">每位家人的紀錄與密碼都會分開保存。</p>
         <form id="authForm">
-          <label id="nameField" class="hidden">你的名字<input id="nameInput" type="text" placeholder="例如：王小明" /></label>
-          <label>帳號<input id="emailInput" type="text" placeholder="輸入帳號" required /></label>
-          <label>密碼<input id="passwordInput" type="password" placeholder="至少 6 個字元" required minlength="6" /></label>
+          <label>選擇使用者<select id="memberInput" required><option value="admin">管理員 k5star</option><option value="dad">爸爸</option><option value="mom">媽媽</option><option value="brother">哥哥</option><option value="sister-in-law">哥哥老婆</option><option value="child-1">老大</option><option value="child-2">老二</option><option value="child-3">老三</option><option value="child-4">老四</option></select></label>
+          <label id="nameField" class="hidden">你的名字<input id="nameInput" type="text" /></label>
+          <input id="emailInput" type="hidden" />
+          <label>密碼<input id="passwordInput" type="password" placeholder="輸入密碼" required minlength="6" /></label>
+          <label id="confirmPasswordField" class="hidden">確認密碼<input id="confirmPasswordInput" type="password" placeholder="再次輸入密碼" minlength="6" /></label>
           <button class="primary-btn" type="submit" id="authSubmit">登入</button>
         </form>
-        <button class="text-btn" id="toggleAuth">還沒有帳戶？ <strong>立即註冊</strong></button>
-        <div class="privacy-note">🔒 示範版資料僅儲存在此瀏覽器，不會上傳至伺服器。</div>
+        <button class="text-btn" id="setupMemberBtn">第一次使用此成員？ <strong>設定密碼</strong></button><button class="text-btn hidden" id="toggleAuth"></button>
+        <div class="privacy-note">🔒 資料會儲存在家庭專用的雲端資料庫中，並依使用者分開保護。</div>
       </div>
     </div>
   </section>
