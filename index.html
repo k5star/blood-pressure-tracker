@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>壓力日記｜血壓追蹤</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <section id="authView" class="auth-shell">
+    <div class="auth-visual">
+      <div class="brand-mark"><span>♥</span> 壓力日記</div>
+      <div class="visual-copy">
+        <p class="eyebrow">YOUR DAILY HEALTH COMPANION</p>
+        <h1>把每一次測量，<br><em>變成更懂自己的線索。</em></h1>
+        <p>拍下血壓計畫面，快速記錄高壓、低壓與脈搏，長期掌握身體的變化。</p>
+      </div>
+      <div class="visual-stats"><div><strong>3</strong><span>項關鍵指標</span></div><div><strong>100%</strong><span>你的資料留在本機</span></div></div>
+    </div>
+    <div class="auth-panel">
+      <div class="auth-card">
+        <div class="mobile-brand brand-mark"><span>♥</span> 壓力日記</div>
+        <p class="eyebrow">WELCOME BACK</p><h2 id="authTitle">登入你的帳戶</h2><p class="muted" id="authSubtitle">每天一點記錄，讓健康更有跡可循。</p>
+        <form id="authForm">
+          <label id="nameField" class="hidden">你的名字<input id="nameInput" type="text" placeholder="例如：王小明" /></label>
+          <label>帳號<input id="emailInput" type="text" placeholder="輸入帳號" required /></label>
+          <label>密碼<input id="passwordInput" type="password" placeholder="至少 6 個字元" required minlength="6" /></label>
+          <button class="primary-btn" type="submit" id="authSubmit">登入</button>
+        </form>
+        <button class="text-btn" id="toggleAuth">還沒有帳戶？ <strong>立即註冊</strong></button>
+        <div class="privacy-note">🔒 示範版資料僅儲存在此瀏覽器，不會上傳至伺服器。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="appView" class="app-shell hidden">
+    <aside class="sidebar"><div class="brand-mark"><span>♥</span> 壓力日記</div><nav>
+      <button class="nav-item active" data-section="overview"><span>◉</span> 今日總覽</button>
+      <button class="nav-item" data-section="records"><span>▤</span> 測量紀錄</button>
+      <button class="nav-item" data-section="insights"><span>⌁</span> 長期趨勢</button>
+    </nav><div class="sidebar-bottom"><div class="tip-card"><span>✦</span><strong>小提醒</strong><p>測量前安靜坐 5 分鐘，讓數值更穩定。</p></div><button id="logoutBtn" class="logout">↪ 登出</button></div></aside>
+    <main class="main-content"><header class="topbar"><div><p class="eyebrow">HEALTH OVERVIEW</p><h1>早安，<span id="userName">朋友</span></h1></div><div class="profile-chip"><div class="avatar" id="avatar">友</div><div><strong id="profileName">朋友</strong><small>健康追蹤者</small></div></div></header>
+      <div id="overviewSection" class="content-section"><div class="hero-card"><div><p class="eyebrow">TODAY'S CHECK-IN</p><h2>今天測量了嗎？</h2><p>上傳血壓計照片，讓我們幫你留下這次的健康足跡。</p><button class="primary-btn" data-open-upload>＋ 上傳測量照片</button></div><div class="hero-art"><div class="monitor"><div class="monitor-screen"><span>SYS</span><b>120</b><span>DIA　 80</span><span>PUL　 72</span></div><div class="monitor-base"></div></div></div></div>
+        <div class="section-heading"><div><p class="eyebrow">AT A GLANCE</p><h2>最近一次測量</h2></div><button class="link-btn" data-section-link="records">查看全部紀錄 →</button></div>
+        <div id="latestCards" class="metric-grid"></div><div class="section-heading trend-heading"><div><p class="eyebrow">LAST 7 DAYS</p><h2>一週變化</h2></div><span class="date-label">mmHg / bpm</span></div><div class="chart-card"><canvas id="trendCanvas" width="900" height="260"></canvas><div id="emptyChart" class="empty-state hidden">再累積幾筆紀錄，就能看到你的趨勢圖。</div></div>
+      </div>
+      <div id="recordsSection" class="content-section hidden"><div class="section-heading"><div><p class="eyebrow">YOUR LOG</p><h2>測量紀錄</h2><p class="muted">每一次測量，都是照顧自己的證據。</p></div><button class="primary-btn" data-open-upload>＋ 新增紀錄</button></div><div id="recordsList" class="records-list"></div></div>
+      <div id="insightsSection" class="content-section hidden"><div class="section-heading"><div><p class="eyebrow">YOUR PATTERNS</p><h2>長期趨勢</h2><p class="muted">用一段時間的資料，觀察身體的節奏。</p></div></div><div class="insight-grid"><div class="insight-card"><span class="insight-icon orange">↗</span><h3>高壓平均</h3><strong id="avgSys">—</strong><small>mmHg</small></div><div class="insight-card"><span class="insight-icon blue">↘</span><h3>低壓平均</h3><strong id="avgDia">—</strong><small>mmHg</small></div><div class="insight-card"><span class="insight-icon green">♥</span><h3>脈搏平均</h3><strong id="avgPulse">—</strong><small>bpm</small></div></div><div class="chart-card large-chart"><canvas id="longCanvas" width="900" height="300"></canvas></div><div class="disclaimer">健康資訊僅供日常紀錄與趨勢參考，不能取代醫師診斷。如有不適或數值異常，請尋求專業醫療協助。</div></div>
+    </main>
+  </section>
+
+  <div id="uploadModal" class="modal hidden"><div class="modal-backdrop" data-close-modal></div><div class="modal-card"><button class="close-btn" data-close-modal>×</button><p class="eyebrow">NEW MEASUREMENT</p><h2>新增測量紀錄</h2><p class="muted">上傳清晰、正面拍攝的血壓計照片。</p><div id="dropZone" class="drop-zone"><input id="photoInput" type="file" accept="image/*" capture="environment" /><div class="upload-icon">⌁</div><strong>拍照或選擇血壓計照片</strong><span>建議正面、光線充足、完整拍到螢幕</span><img id="preview" class="preview hidden" alt="血壓計照片預覽" /></div><div id="scanStatus" class="scan-status hidden">✦ 正在裁切螢幕並辨識數字…</div><div class="form-grid"><label>高壓 SYS<input id="sysInput" type="number" min="50" max="300" placeholder="例如 111" /></label><label>低壓 DIA<input id="diaInput" type="number" min="30" max="200" placeholder="例如 66" /></label><label>脈搏 PUL<input id="pulseInput" type="number" min="30" max="220" placeholder="例如 65" /></label></div><p class="form-hint">辨識結果一定要先人工確認；若照片模糊，系統會留空，不會猜測數值。</p><button id="saveRecord" class="primary-btn full-btn">儲存這次測量</button></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="app.js"></script>
+  <script src="cloud.js"></script>
+</body></html>
