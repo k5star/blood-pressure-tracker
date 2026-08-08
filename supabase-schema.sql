@@ -50,3 +50,7 @@ drop policy if exists "body users can delete own measurements" on public.body_me
 create policy "body users can read own or admin measurements" on public.body_measurements for select using (auth.uid() = user_id or auth.jwt() ->> 'email' = 'bp-admin@family-bp.local');
 create policy "body users can insert own measurements" on public.body_measurements for insert with check (auth.uid() = user_id);
 create policy "body users can delete own measurements" on public.body_measurements for delete using (auth.uid() = user_id);
+
+-- 加速依日期讀取最近紀錄
+create index if not exists bp_measurements_measured_at_idx on public.bp_measurements (measured_at desc);
+create index if not exists body_measurements_measured_at_idx on public.body_measurements (measured_at desc);

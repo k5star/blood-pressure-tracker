@@ -18,6 +18,7 @@
   };
   let session=null;
   let setupMode=false;
+  const LOAD_LIMIT=100;
   window.bpPhotoFile=null;
 
   const currentMember=()=>members[$('#memberInput').value];
@@ -37,8 +38,8 @@
   async function loadRecords(){
     if(!session){state.records=[];state.bodyRecords=[];return}
     const [bloodPressure,body]=await Promise.all([
-      client.from('bp_measurements').select('*').order('measured_at',{ascending:false}),
-      client.from('body_measurements').select('*').order('measured_at',{ascending:false})
+      client.from('bp_measurements').select('*').order('measured_at',{ascending:false}).limit(LOAD_LIMIT),
+      client.from('body_measurements').select('*').order('measured_at',{ascending:false}).limit(LOAD_LIMIT)
     ]);
     if(bloodPressure.error){console.error(bloodPressure.error);toast('讀取血壓紀錄失敗');return}
     if(body.error){console.error(body.error);toast('讀取身高體重紀錄失敗，請先執行最新 Supabase SQL');return}
@@ -79,7 +80,9 @@
     try{
       const bmi=Number((weight/((height/100)**2)).toFixed(1));
       const insert=await client.from('body_measurements').insert({user_id:session.user.id,member_name:state.user.name,height_cm:height,weight_kg:weight,bmi}).select().single();
-      if(insert.error)throw insert.error;await loadRecords();$('#bodyRecordForm').reset();renderAll();toast('身高體重已儲存');
+      if(insert.error)throw insert.error;
+      const r=insert.data;state.bodyRecords.unshift({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,height:r.height_cm,weight:r.weight_kg,bmi:r.bmi});
+      $('#bodyRecordForm').reset();renderAll();toast('身高體重已儲存');
     }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存身高體重'}
   };
   $('#saveRecord').onclick=async()=>{
@@ -89,9 +92,12 @@
     const btn=$('#saveRecord');btn.disabled=true;btn.textContent='儲存中…';let photoPath=null;
     try{
       const file=window.bpPhotoFile;
-      if(file){photoPath=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const upload=await client.storage.from('blood-pressure-photos').upload(photoPath,file,{contentType:file.type,upsert:false});if(upload.error)throw upload.error}
+      if(file){btn.textContent='正在上傳照片…';photoPath=`${session.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g,'_')}`;const upload=await client.storage.from('blood-pressure-photos').upload(photoPath,file,{contentType:file.type,upsert:false});if(upload.error)throw upload.error}
+      btn.textContent='正在儲存數值…';
       const insert=await client.from('bp_measurements').insert({user_id:session.user.id,member_name:state.user.name,systolic:sys,diastolic:dia,pulse,photo_path:photoPath}).select().single();
-      if(insert.error)throw insert.error;await loadRecords();closeModal();renderAll();toast('測量與照片已儲存');
+      if(insert.error)throw insert.error;
+      const r=insert.data;state.records.unshift({id:r.id,userId:r.user_id,memberName:r.member_name,date:r.measured_at,sys:r.systolic,dia:r.diastolic,pulse:r.pulse,photoPath:r.photo_path});
+      closeModal();renderAll();toast('測量與照片已儲存');
     }catch(err){console.error(err);toast('儲存失敗：'+err.message)}finally{btn.disabled=false;btn.textContent='儲存這次測量'}
   };
   const originalOpen=window.openModal;window.openModal=function(){window.bpPhotoFile=null;originalOpen()};
